@@ -1,0 +1,37 @@
+//first you need to specify which the proto version you are using
+syntax = "proto3";
+
+package stock_trading;
+// I want a grpc to generate these classes as an individual classes
+// so we specify options
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+// I need to group all my grpc generated classes in one outer class
+option java_outer_classname = "StockTradingProto";
+
+
+
+//service in (grpc) is like an interface in (java)
+service StockTradingServiceInterface {
+  // UNARY - RPC -> get current stock price
+  rpc getStockPrice (StockRequest) returns (StockResponse);
+
+  // SERVER STREAMING
+
+  // CLIENT STREAMING
+
+  // BI-DIRECTIONAL STREAMING
+
+}
+
+// StockRequest and StockResponse are resemble to DTO to create them as classes in grpc we have to define "message"
+// message in (grpc) is like a class in (java)
+message StockRequest {
+  string stock_symbol = 1;
+}
+
+message StockResponse {
+  string stock_symbol = 1;// (1) is referred to field number and so on
+  double price = 2;
+  string timestamp = 3;
+}
