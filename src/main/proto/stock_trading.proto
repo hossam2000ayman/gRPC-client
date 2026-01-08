@@ -21,7 +21,8 @@ service StockTradingServiceInterface {
   // SERVER STREAMING
   rpc subscribeStockPrice(google.protobuf.Empty) returns (stream StockResponse);
 
-  // CLIENT STREAMING
+  // CLIENT STREAMING - place multiple stock orders
+  rpc bulkStockOrder(stream StockOrder) returns (OrderSummary);
 
   // BI-DIRECTIONAL STREAMING
 
@@ -37,4 +38,18 @@ message StockResponse {
   string stock_symbol = 1;// (1) is referred to field number and so on
   double price = 2;
   string timestamp = 3;
+}
+
+message StockOrder {
+  int64 order_id = 1;
+  string stock_symbol = 2;
+  string order_type = 3; //Buy or Sell
+  double price = 4;
+  int32 quantity = 5;
+}
+
+message OrderSummary {
+  int32 total_orders = 1;
+  double total_amount = 2;
+  int32 success_count = 3;
 }

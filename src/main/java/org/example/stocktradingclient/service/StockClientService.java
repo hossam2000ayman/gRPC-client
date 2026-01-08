@@ -1,14 +1,17 @@
 package org.example.stocktradingclient.service;
 
-import com.example.grpc.StockRequest;
-import com.example.grpc.StockResponse;
-import com.example.grpc.StockTradingServiceInterfaceGrpc;
+import com.example.grpc.*;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.example.stocktradingclient.dto.OrderSummaryResponseDTO;
+import org.example.stocktradingclient.dto.StockOrderRequestDTO;
 import org.example.stocktradingclient.dto.StockResponseDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
+import java.util.List;
 
 @Service
 public class StockClientService {
@@ -60,6 +63,62 @@ public class StockClientService {
                 emitter.complete();
             }
         });
+
+        return emitter;
+    }
+
+    public SseEmitter bulkStockOrder(List<StockOrderRequestDTO> orders) {
+
+        SseEmitter emitter = new SseEmitter();
+
+
+        StreamObserver<OrderSummary> responseObserver = new StreamObserver<>() {
+            @Override
+            public void onNext(OrderSummary orderSummary) {
+                try {
+                    OrderSummaryResponseDTO responseDTO = new OrderSummaryResponseDTO(
+                            orderSummary.getTotalOrders(),
+                            orderSummary.getTotalAmount(),
+                            orderSummary.getSuccessCount()
+                    );
+                    emitter.send(responseDTO);
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                System.out.println("Error receiving order summary: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Order summary stream completed.");
+                emitter.complete();
+            }
+        };
+        StreamObserver<StockOrder> requestObserver = stockAsyncStub.bulkStockOrder(responseObserver);
+
+        // send multiple stream of stock orders as message/request
+
+        orders.forEach(
+                order -> {
+                    try {
+                        StockOrder stockOrder = StockOrder.newBuilder()
+                                .setStockSymbol(order.stock_symbol())
+                                .setOrderType(order.order_type())
+                                .setPrice(order.price())
+                                .setQuantity(order.quantity())
+                                .build();
+                        requestObserver.onNext(stockOrder);
+                    } catch (Exception e) {
+                        responseObserver.onError(e);
+                    }
+                }
+        );
+        //done sending order
+        requestObserver.onCompleted();
 
         return emitter;
     }
