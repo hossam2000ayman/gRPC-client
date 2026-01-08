@@ -2,6 +2,8 @@
 syntax = "proto3";
 
 package stock_trading;
+import "google/protobuf/empty.proto";
+
 // I want a grpc to generate these classes as an individual classes
 // so we specify options
 option java_multiple_files = true;
@@ -17,6 +19,7 @@ service StockTradingServiceInterface {
   rpc getStockPrice (StockRequest) returns (StockResponse);
 
   // SERVER STREAMING
+  rpc subscribeStockPrice(google.protobuf.Empty) returns (stream StockResponse);
 
   // CLIENT STREAMING
 
