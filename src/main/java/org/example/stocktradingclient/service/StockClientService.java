@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class StockClientService {
@@ -121,6 +122,41 @@ public class StockClientService {
         requestObserver.onCompleted();
 
         return emitter;
+    }
+
+    public void startLiveTrading() {
+        StreamObserver<TradeStatus> responseObserver = new StreamObserver<>() {
+            @Override
+            public void onNext(TradeStatus tradeStatus) {
+                System.out.println("Received trade status: " + tradeStatus);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                System.out.println("Error in live trading: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Live trading completed.");
+            }
+        };
+        StreamObserver<StockOrder> requestObserver = stockAsyncStub.liveTrading(responseObserver);
+
+        // sending multiple order request from client to server
+        for (int i = 1; i <= 10; i++) {
+            StockOrder stockOrder = StockOrder.newBuilder()
+                    .setOrderId(i)
+                    .setStockSymbol("STOCK-" + i)
+                    .setOrderType(i % 2 == 0 ? "BUY" : "SELL")
+                    .setPrice(100.0 + i)
+                    .setQuantity(10 + i)
+                    .build();
+            requestObserver.onNext(stockOrder);
+        }
+        requestObserver.onCompleted();
+
+
     }
 
 }

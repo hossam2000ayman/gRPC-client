@@ -6,6 +6,8 @@ import "google/protobuf/empty.proto";
 
 // I want a grpc to generate these classes as an individual classes
 // so we specify options
+
+// it will generate a separate .java file for each top-level message, enum, and service defined in the .proto
 option java_multiple_files = true;
 option java_package = "com.example.grpc";
 // I need to group all my grpc generated classes in one outer class
@@ -24,8 +26,8 @@ service StockTradingServiceInterface {
   // CLIENT STREAMING - place multiple stock orders
   rpc bulkStockOrder(stream StockOrder) returns (OrderSummary);
 
-  // BI-DIRECTIONAL STREAMING
-
+  // BI-DIRECTIONAL STREAMING - live trading
+  rpc liveTrading(stream StockOrder) returns (stream TradeStatus);
 }
 
 // StockRequest and StockResponse are resemble to DTO to create them as classes in grpc we have to define "message"
@@ -52,4 +54,11 @@ message OrderSummary {
   int32 total_orders = 1;
   double total_amount = 2;
   int32 success_count = 3;
+}
+
+message TradeStatus {
+  int64 order_id = 1;
+  string status = 2; // e.g., "EXECUTED", "PENDING", "FAILED"
+  string message = 3; // reason if failed or success message
+  string timestamp = 4;
 }

@@ -33,4 +33,9 @@ public class StockClientController {
     public SseEmitter placeBulkOrders(@RequestBody List<StockOrderRequestDTO> orders) {
         return stockClientService.bulkStockOrder(orders);
     }
+
+    @GetMapping("/start/live/trading")
+    public void startLiveTrading() {
+        stockClientService.startLiveTrading();
+    }
 }
